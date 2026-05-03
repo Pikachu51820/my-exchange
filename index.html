@@ -1,43 +1,75 @@
-<script>
-    // Используем прокси для обхода блокировки CORS
-    const PROXY_URL = 'https://allorigins.win';
-    const JSON_URL = encodeURIComponent('https://www.tsunami.cash/service/export/json/5J1hbq9livo/');
-    const REF_LINK = 'tsunami.cash/ref/ur1jj3f57lg/';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Exchange | Быстрый обмен</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; width: 100%; max-width: 600px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; text-align: center; font-size: 24px; }
+        .rate-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .rate-info { font-weight: bold; }
+        .btn { background: #28a745; color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-size: 14px; transition: 0.3s; }
+        .btn:hover { background: #218838; }
+        .loader { text-align: center; color: #666; padding: 20px; }
+        .footer-bot { display: block; margin-top: 20px; text-align: center; color: #0088cc; text-decoration: none; font-weight: bold; border: 2px solid #0088cc; padding: 10px; border-radius: 10px; }
+    </style>
+</head>
+<body>
 
-    async function loadRates() {
+<div class="card">
+    <h1>💱 Моментальный обмен</h1>
+    <div id="status" class="loader">🔍 Загрузка актуальных курсов...</div>
+    <div id="ratesList"></div>
+    
+    <a href="https://t.me" class="footer-bot">🤖 Перейти в Telegram Бот</a>
+</div>
+
+<script>
+    const REF_LINK = 'https://tsunami.cash';
+    // Пробуем другой прокси-сервер (Cors-anywhere или similar)
+    const JSON_URL = 'https://codetabs.com' + encodeURIComponent('https://tsunami.cash');
+
+    async function load() {
+        const list = document.getElementById('ratesList');
+        const status = document.getElementById('status');
+        
         try {
-            // Запрос через прокси-сервер
-            const response = await fetch(PROXY_URL + JSON_URL);
+            const response = await fetch(JSON_URL);
             const data = await response.json();
-            const tableBody = document.getElementById('tableBody');
             
-            // Список валют, которые мы хотим видеть в таблице
-            const popular = ['BTC', 'ETH', 'USDT', 'TRX', 'RUB', 'SBERRUB', 'TCSBRUB', 'CARDRUB'];
-            
-            tableBody.innerHTML = ''; 
+            status.style.display = 'none';
+            list.innerHTML = '';
+
+            // Список того, что показываем в первую очередь
+            const filter = ['BTC', 'ETH', 'USDT', 'RUB', 'SBERRUB'];
 
             data.forEach(item => {
-                // Если валюта в списке популярных - добавляем в таблицу
-                if (popular.includes(item.from)) {
-                    const row = `
-                        <tr>
-                            <td><b>${item.from}</b></td>
-                            <td>${item.to}</td>
-                            <td>1 ${item.from} = ${parseFloat(item.in).toFixed(2)} ${item.to}</td>
-                            <td><a href="${REF_LINK}" target="_blank" class="btn-exchange">Обменять</a></td>
-                        </tr>
+                if (filter.includes(item.from)) {
+                    const div = document.createElement('div');
+                    div.className = 'rate-item';
+                    div.innerHTML = `
+                        <div class="rate-info">
+                            <span>${item.from} ➔ ${item.to}</span><br>
+                            <small style="color: #28a745;">Курс: ${parseFloat(item.in || 0).toFixed(2)}</small>
+                        </div>
+                        <a href="${REF_LINK}" class="btn">Обменять</a>
                     `;
-                    tableBody.innerHTML += row;
+                    list.appendChild(div);
                 }
             });
-        } catch (error) {
-            console.error(error);
-            document.getElementById('tableBody').innerHTML = '<tr><td colspan="4">Ошибка загрузки курсов. Подождите 10 секунд и обновите страницу.</td></tr>';
+            
+            if (list.innerHTML === '') throw new Error('Empty data');
+
+        } catch (e) {
+            status.innerHTML = '⚠️ Курсы временно обновляются на стороне банка.<br><br><a href="' + REF_LINK + '" class="btn" style="background:#007bff">Перейти к обмену на сайт</a>';
         }
     }
 
-    loadRates();
-    // Обновляем данные каждые 5 минут
-    setInterval(loadRates, 300000);
+    load();
 </script>
+
+</body>
+</html>
 
