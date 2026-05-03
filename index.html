@@ -1,81 +1,43 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Exchange | Быстрый обмен</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        .rates-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .rates-table th, .rates-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .rates-table th { background: #2c3e50; color: white; }
-        .btn-exchange { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
-        .btn-exchange:hover { background: #219150; }
-        .bot-link { display: block; text-align: center; margin-top: 30px; padding: 15px; background: #0088cc; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; }
-        .refresh-hint { font-size: 12px; color: #7f8c8d; text-align: center; margin-top: 10px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Обмен Криптовалют</h1>
-    <p style="text-align: center;">Актуальные курсы на сегодня. Выберите направление:</p>
-
-    <table class="rates-table" id="ratesTable">
-        <thead>
-            <tr>
-                <th>Отдаете</th>
-                <th>Получаете</th>
-                <th>Курс</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- Сюда данные подгрузятся сами -->
-        </tbody>
-    </table>
-    <p class="refresh-hint">Курсы обновляются автоматически из системы Tsunami Cash</p>
-
-    <a href="https://t.me" class="bot-link">🤖 Наш Telegram Бот (Обмен за 1 минуту)</a>
-</div>
-
 <script>
-    const JSON_URL = 'https://www.tsunami.cash/service/export/json/5J1hbq9livo/';
+    // Используем прокси для обхода блокировки CORS
+    const PROXY_URL = 'https://allorigins.win';
+    const JSON_URL = encodeURIComponent('https://www.tsunami.cash/service/export/json/5J1hbq9livo/');
     const REF_LINK = 'tsunami.cash/ref/ur1jj3f57lg/';
 
     async function loadRates() {
         try {
-            const response = await fetch(JSON_URL);
+            // Запрос через прокси-сервер
+            const response = await fetch(PROXY_URL + JSON_URL);
             const data = await response.json();
             const tableBody = document.getElementById('tableBody');
             
-            // Фильтруем популярные направления, чтобы не перегружать страницу
-            const popular = ['BTC', 'ETH', 'USDT', 'RUB', 'SBERRUB', 'TCSBRUB'];
+            // Список валют, которые мы хотим видеть в таблице
+            const popular = ['BTC', 'ETH', 'USDT', 'TRX', 'RUB', 'SBERRUB', 'TCSBRUB', 'CARDRUB'];
             
-            tableBody.innerHTML = ''; // Очистка
+            tableBody.innerHTML = ''; 
 
             data.forEach(item => {
+                // Если валюта в списке популярных - добавляем в таблицу
                 if (popular.includes(item.from)) {
                     const row = `
                         <tr>
                             <td><b>${item.from}</b></td>
                             <td>${item.to}</td>
                             <td>1 ${item.from} = ${parseFloat(item.in).toFixed(2)} ${item.to}</td>
-                            <td><a href="${REF_LINK}" class="btn-exchange">Обменять</a></td>
+                            <td><a href="${REF_LINK}" target="_blank" class="btn-exchange">Обменять</a></td>
                         </tr>
                     `;
                     tableBody.innerHTML += row;
                 }
             });
         } catch (error) {
-            document.getElementById('tableBody').innerHTML = '<tr><td colspan="4">Ошибка загрузки курсов. Попробуйте обновить страницу.</td></tr>';
+            console.error(error);
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="4">Ошибка загрузки курсов. Подождите 10 секунд и обновите страницу.</td></tr>';
         }
     }
 
     loadRates();
+    // Обновляем данные каждые 5 минут
+    setInterval(loadRates, 300000);
 </script>
 
-</body>
-</html>
